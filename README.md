@@ -148,13 +148,82 @@ After the support threshold is reached, the on-chain process runs for a fixed
 |---|---|
 | **Minimum to submit** | A validator vote account with at least **100,000 SOL** staked |
 | **Support to trigger a vote** | **15% of active stake** must signal support to move from `Support` to `Voting` |
-| **Quorum** | **None** — there is no minimum turnout |
-| **Approval threshold** | **Supermajority** — **`For` ≥ two-thirds (66.67%) of `For` + `Against` stake**. `Abstain` is not counted. |
+| **Quorum** | **One-third (1/3) of active stake** must participate (`For` + `Against` + `Abstain` combined) for the vote to be a valid signal |
+| **Approval threshold** | **Supermajority** — `For` ≥ **two-thirds (66.67%)** of the participating quorum (`For` + `Against` + `Abstain`) |
+| **Vote allocation** | **Block vote** (100% of stake on one option) or **Split vote** (basis-point allocation across `For` / `Against` / `Abstain`, summing to 10,000 bp) |
 | **Voting period** | **3 epochs** |
 
-The threshold is measured over decisive votes only: `Abstain` stake is excluded
-from the denominator. A vote that does not reach the two-thirds supermajority
-within the voting period is **Rejected**.
+Outcomes are determined by applying these rules to the on-chain tallies:
+
+- **Accepted** — quorum met and `For` ≥ 2/3 of participating stake.
+- **Rejected** — quorum met but `For` < 2/3 of participating stake.
+- **Inconclusive** — quorum not met. Per Constitution Art. IV.6, this signals
+  network indifference rather than rejection: a SIMD elevated to SGP reverts to
+  optimistic passage; a directly-raised SGP indicates the community has not
+  weighed in and developers may proceed at their own risk.
+
+The on-chain `svmgov` program records the `For` / `Against` / `Abstain` lamport
+totals and locks them on `finalize_proposal`. Quorum and supermajority are
+evaluated off-chain by applying these rules to the locked tallies. The Solana
+Constitution defines the authoritative interpretation.
+
+## Delegator sovereignty
+
+Stakers retain full voting sovereignty over their own stake (Constitution
+Art. III.1.ii). The on-chain program allows each delegator to override their
+validator's vote on any SGP using `svmgov cast-vote-override`:
+
+- A delegator can override **before** their validator votes: the override is
+  cached and the validator's effective voting weight is reduced by the
+  delegator's stake when the validator subsequently votes.
+- A delegator can override **after** their validator votes: the validator's
+  recorded vote is reduced by the delegator's stake at the moment the override
+  is recorded.
+- A delegator can override **in the absence** of a validator vote: the
+  delegator's stake participates directly.
+
+This guarantees that no validator can speak for a delegator who disagrees with
+them, and that delegators always have a meaningful vote whether or not their
+validator turns out.
+
+## Amendment proposals
+
+Per Constitution Art. V.3, SGPs that amend the Constitution are classified as:
+
+- **Minor amendments** — changes to language, articulation, or existing
+  articles that do not affect Key Governance Parameters. May be batched into a
+  single SGP.
+- **Major amendments** — changes to Key Governance Parameters (Art. VII) or
+  the addition or deletion of entire articles. **Must be standalone SGPs** and
+  cannot be combined with other proposals.
+
+Authors of major-amendment SGPs should prefix their PR title with
+`[major-amendment]` to make the classification clear during review.
+
+## Maintainers
+
+The SGP repository is overseen by maintainers responsible for editorial
+review, proposal numbering, and spam control. The full maintainer mandate is
+defined in Constitution Art. III.3.
+
+## Elevating a SIMD to an SGP
+
+Per Constitution Art. II.4, SIMDs pass optimistically through technical review
+unless the validator set demands a stake-weighted vote. The elevation procedure
+is:
+
+1. **Draft.** A validator opens a Draft SGP in this repo that references the
+   SIMD content and links the SIMD pull request in
+   `solana-foundation/solana-improvement-documents`.
+2. **Support.** The Proposal Sponsor Threshold (**15% of active stake**) must
+   be reached to advance the SGP from `Support` to `Voting`.
+3. **Vote.** At the close of the voting period (Constitution Art. IV.6):
+   - If quorum is **not** met → the SGP is `Inconclusive` and the SIMD
+     continues to pass optimistically.
+   - If quorum is met and **`For` ≥ 2/3** of participating stake → the SIMD is
+     mandated to proceed.
+   - If quorum is met and **`For` < 2/3** of participating stake → the SIMD is
+     blocked.
 
 ## Vote integrity
 
