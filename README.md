@@ -125,7 +125,7 @@ Side states:
 | State | What it means |
 |---|---|
 | **Withdrawn** | The author closed the SGP before the vote. |
-| **Expired** | The Support stage ended without reaching the support threshold. |
+| **Expired** | The Support stage ended without reaching the support threshold before the 7 epoch expiry. |
 
 ## Timeline
 
@@ -134,7 +134,7 @@ A Solana epoch is approximately two days.
 
 | Phase | Duration | What happens |
 |---|---|---|
-| **Support** | Until the threshold is met | Validators signal support. The SGP advances once **15% of active stake** supports it; otherwise it **Expires**. |
+| **Support** | Until the threshold is met (expires after **7 epochs**) | Validators signal support. The SGP advances once **15% of active stake** supports it; otherwise it **Expires**. |
 | **Discussion** | **7 epochs** | The proposal is locked for debate. The community reviews and discusses; no votes are cast yet. |
 | **NCN snapshot** | **1 epoch** | The Node Consensus Network (NCN) captures the stake state that determines voting weights for the vote. |
 | **Voting** | **3 epochs** | Stake-weighted voting is open. At the end, the SGP is **Accepted** or **Rejected**. |
