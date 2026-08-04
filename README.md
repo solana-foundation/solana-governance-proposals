@@ -97,26 +97,29 @@ supersedes: <SGP number, if any>
 ---
 ```
 
-and contains, at minimum: a **Summary**, **Motivation**, the **Proposal**
-itself, **Rationale**, **Alternatives Considered**, **Impact**, **Relationship
-to SIMDs** (what technical work a "yes" would trigger), and the exact **Vote**
-question with its options. See the template for the full structure.
+and contains, at minimum: a **Summary**, a **Technical Sponsor** and
+**Financial Sponsor**, **Related SIMDs and SGPs** (what technical work a "yes"
+would trigger), the **Motivation**, the **Proposal** itself, its
+**Dependencies**, and **Impact and Open Questions**. See the template for the
+full structure.
 
 ## Lifecycle
 
 ```
-Idea → Draft → Support → Voting ─┬─→ Accepted → Implemented → Activated
-                                 └─→ Rejected
+Idea → Draft → Final Draft → Support → Voting ─┬─→ Accepted → Implemented → Activated
+                                               ├─→ Rejected
+                                               └─→ Inconclusive
 ```
 
 | State | What it means |
 |---|---|
 | **Idea** | Vetted in this repo's **Discussions**. Not yet a pull request. |
 | **Draft** | A markdown file in an open PR. Text is still being refined. |
-| **Support** | Document frozen at a commit SHA; an on-chain `Proposal` exists. Gathering stake support. |
+| **Final Draft** | Authors signal the draft is ready for on-chain sponsorship. |
+| **Support** | Document frozen at a commit SHA; an on-chain `Proposal` exists. Validators accumulate support across the support window; each new signal re-tallies supporter stake at the current epoch. |
 | **Voting** | Support threshold reached. A stake-weighted vote is open. |
-| **Accepted** | The vote reached the approval threshold. The direction is mandated. |
-| **Rejected** | The vote closed without reaching the approval threshold. |
+| **Accepted** | Quorum met and the approval threshold reached. The direction is mandated. |
+| **Rejected** | Quorum met but the approval threshold was not reached. |
 | **Implemented** | The accepted direction has been carried out (typically via one or more SIMDs and client releases). |
 | **Activated** | The change is live on mainnet. |
 
@@ -126,6 +129,7 @@ Side states:
 |---|---|
 | **Withdrawn** | The author closed the SGP before the vote. |
 | **Expired** | The Support stage ended without reaching the support threshold. |
+| **Inconclusive** | The Voting Period completed but quorum was not met — a signal of network indifference, not rejection. |
 
 ## Timeline
 
@@ -134,7 +138,7 @@ A Solana epoch is approximately two days.
 
 | Phase | Duration | What happens |
 |---|---|---|
-| **Support** | Until the threshold is met | Validators signal support. The SGP advances once **15% of active stake** supports it; otherwise it **Expires**. |
+| **Support** | Up to the support window | Validators signal support, and may do so across multiple epochs within the window. The SGP advances as soon as **15% of active stake** supports it; if the window closes first, it **Expires**. |
 | **Discussion** | **7 epochs** | The proposal is locked for debate. The community reviews and discusses; no votes are cast yet. |
 | **NCN snapshot** | **1 epoch** | The Node Consensus Network (NCN) captures the stake state that determines voting weights for the vote. |
 | **Voting** | **3 epochs** | Stake-weighted voting is open. At the end, the SGP is **Accepted** or **Rejected**. |
@@ -157,21 +161,20 @@ Outcomes are determined by applying these rules to the on-chain tallies:
 
 - **Accepted** — quorum met and `For` ≥ 2/3 of participating stake.
 - **Rejected** — quorum met but `For` < 2/3 of participating stake.
-- **Inconclusive** — quorum not met. Per Constitution Art. IV.6, this signals
-  network indifference rather than rejection: a SIMD elevated to SGP reverts to
-  optimistic passage; a directly-raised SGP indicates the community has not
-  weighed in and developers may proceed at their own risk.
+- **Inconclusive** — quorum not met. This signals network indifference rather
+  than rejection: a SIMD elevated to SGP reverts to optimistic passage; a
+  directly-raised SGP indicates the community has not weighed in and developers
+  may proceed at their own risk.
 
 The on-chain `svmgov` program records the `For` / `Against` / `Abstain` lamport
 totals and locks them on `finalize_proposal`. Quorum and supermajority are
-evaluated off-chain by applying these rules to the locked tallies. The Solana
-Constitution defines the authoritative interpretation.
+evaluated off-chain by applying these rules to the locked tallies.
 
 ## Delegator sovereignty
 
-Stakers retain full voting sovereignty over their own stake (Constitution
-Art. III.1.ii). The on-chain program allows each delegator to override their
-validator's vote on any SGP using `svmgov cast-vote-override`:
+Stakers retain full voting sovereignty over their own stake. The on-chain
+program allows each delegator to override their validator's vote on any SGP
+using `svmgov cast-vote-override`:
 
 - A delegator can override **before** their validator votes: the override is
   cached and the validator's effective voting weight is reduced by the
@@ -188,14 +191,13 @@ validator turns out.
 
 ## Amendment proposals
 
-Per Constitution Art. V.3, SGPs that amend the Constitution are classified as:
+Some SGPs amend network governance policy itself. These are classified as:
 
-- **Minor amendments** — changes to language, articulation, or existing
-  articles that do not affect Key Governance Parameters. May be batched into a
-  single SGP.
-- **Major amendments** — changes to Key Governance Parameters (Art. VII) or
-  the addition or deletion of entire articles. **Must be standalone SGPs** and
-  cannot be combined with other proposals.
+- **Minor amendments** — changes to language or existing policy that do not
+  affect Key Governance Parameters. May be batched into a single SGP.
+- **Major amendments** — changes to Key Governance Parameters, or the addition
+  or removal of entire policy areas. **Must be standalone SGPs** and cannot be
+  combined with other proposals.
 
 Authors of major-amendment SGPs should prefix their PR title with
 `[major-amendment]` to make the classification clear during review.
@@ -203,21 +205,19 @@ Authors of major-amendment SGPs should prefix their PR title with
 ## Maintainers
 
 The SGP repository is overseen by maintainers responsible for editorial
-review, proposal numbering, and spam control. The full maintainer mandate is
-defined in Constitution Art. III.3.
+review, proposal numbering, and spam control.
 
 ## Elevating a SIMD to an SGP
 
-Per Constitution Art. II.4, SIMDs pass optimistically through technical review
-unless the validator set demands a stake-weighted vote. The elevation procedure
-is:
+SIMDs pass optimistically through technical review unless the validator set
+demands a stake-weighted vote. The elevation procedure is:
 
 1. **Draft.** A validator opens a Draft SGP in this repo that references the
    SIMD content and links the SIMD pull request in
    `solana-foundation/solana-improvement-documents`.
 2. **Support.** The Proposal Sponsor Threshold (**15% of active stake**) must
    be reached to advance the SGP from `Support` to `Voting`.
-3. **Vote.** At the close of the voting period (Constitution Art. IV.6):
+3. **Vote.** At the close of the voting period:
    - If quorum is **not** met → the SGP is `Inconclusive` and the SIMD
      continues to pass optimistically.
    - If quorum is met and **`For` ≥ 2/3** of participating stake → the SIMD is
