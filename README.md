@@ -106,7 +106,8 @@ question with its options. See the template for the full structure.
 
 ```
 Idea → Draft → Support → Voting ─┬─→ Accepted → Implemented → Activated
-                                 └─→ Rejected
+                                 ├─→ Rejected
+                                 └─→ Inconclusive
 ```
 
 | State | What it means |
@@ -115,8 +116,8 @@ Idea → Draft → Support → Voting ─┬─→ Accepted → Implemented → 
 | **Draft** | A markdown file in an open PR. Text is still being refined. |
 | **Support** | Document frozen at a commit SHA; an on-chain `Proposal` exists. Gathering stake support. |
 | **Voting** | Support threshold reached. A stake-weighted vote is open. |
-| **Accepted** | The vote reached the approval threshold. The direction is mandated. |
-| **Rejected** | The vote closed without reaching the approval threshold. |
+| **Accepted** | Quorum was met and the vote reached the approval threshold. |
+| **Rejected** | Quorum was met but the vote closed without reaching the approval threshold. |
 | **Implemented** | The accepted direction has been carried out (typically via one or more SIMDs and client releases). |
 | **Activated** | The change is live on mainnet. |
 
@@ -126,6 +127,7 @@ Side states:
 |---|---|
 | **Withdrawn** | The author closed the SGP before the vote. |
 | **Expired** | The Support stage ended without reaching the support threshold before the 7 epoch expiry. |
+| **Inconclusive** | The vote closed without meeting the one-third quorum. A signal of network indifference rather than rejection. |
 
 ## Timeline
 
@@ -137,7 +139,7 @@ A Solana epoch is approximately two days.
 | **Support** | Until the threshold is met (expires after **7 epochs**) | Validators signal support. The SGP advances once **15% of active stake** supports it; otherwise it **Expires**. |
 | **Discussion** | **7 epochs** | The proposal is locked for debate. The community reviews and discusses; no votes are cast yet. |
 | **NCN snapshot** | **1 epoch** | The Node Consensus Network (NCN) captures the stake state that determines voting weights for the vote. |
-| **Voting** | **3 epochs** | Stake-weighted voting is open. At the end, the SGP is **Accepted** or **Rejected**. |
+| **Voting** | **3 epochs** | Stake-weighted voting is open. At the end, the SGP is **Accepted**, **Rejected**, or **Inconclusive** (quorum not met). |
 
 After the support threshold is reached, the on-chain process runs for a fixed
 **11 epochs** (7 + 1 + 3) before the outcome is final.
@@ -148,13 +150,17 @@ After the support threshold is reached, the on-chain process runs for a fixed
 |---|---|
 | **Minimum to submit** | A validator vote account with at least **100,000 SOL** staked |
 | **Support to trigger a vote** | **15% of active stake** must signal support to move from `Support` to `Voting` |
-| **Quorum** | **None** — there is no minimum turnout |
-| **Approval threshold** | **Supermajority** — **`For` ≥ two-thirds (66.67%) of `For` + `Against` stake**. `Abstain` is not counted. |
+| **Quorum** | **One-third (1/3) of network stake** — participating stake is the sum of `For` + `Against` + `Abstain` |
+| **Approval threshold** | **Supermajority** — **`For` ≥ two-thirds (66.67%) of `For` + `Against` + `Abstain` stake** |
 | **Voting period** | **3 epochs** |
 
-The threshold is measured over decisive votes only: `Abstain` stake is excluded
-from the denominator. A vote that does not reach the two-thirds supermajority
-within the voting period is **Rejected**.
+The threshold is measured over all participating stake: the denominator is
+`For + Against + Abstain`. `Abstain` stake counts toward quorum and toward the
+denominator, but does not count as a `For` vote. A vote that meets quorum but
+does not reach the two-thirds supermajority within the voting period is
+**Rejected**. A vote that does not meet quorum is **Inconclusive** — a signal
+of network indifference rather than rejection (see
+[SGP-0001](./proposals/sgp-0001-solana-constitution.md), Article IV).
 
 ## Vote integrity
 
