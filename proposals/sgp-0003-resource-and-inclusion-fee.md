@@ -2,7 +2,7 @@
 sgp: 0003
 title: Resource and Inclusion Fee
 authors: cavey
-status: Draft
+status: Rejected
 created: 2026-08-03
 supersedes:
 ---

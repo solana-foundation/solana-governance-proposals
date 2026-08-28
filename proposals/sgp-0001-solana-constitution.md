@@ -2,7 +2,7 @@
 sgp: 0001
 title: The Solana Constitution
 authors: Nick Almond <nick@jito.network> (Jito), Tushar Jain <tushar@multicoin.capital> (Multicoin)
-status: Draft
+status: Accepted
 created: 2026-06-29
 ---
 

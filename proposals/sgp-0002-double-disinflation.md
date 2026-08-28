@@ -2,7 +2,7 @@
 sgp: XXXX
 title: Double Disinflation Rate
 authors: Lostin & 0xIchigo (Helius)
-status: Draft
+status: Accepted
 created: 2026-07-03
 ---
 
